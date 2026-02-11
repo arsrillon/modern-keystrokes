@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "modern-keystrokes",
+	"version": "${version}",
+	"name": "Modern Keystrokes",
+	"description": "A fabric mod that display keystrokes and CPS.",
+	"authors": [
+		"marblock"
+	],
+	"contact": {
+		"sources": "https://github.com/arsrillon/modern-keystrokes"
+	},
+	"license": "MIT",
+	"icon": "assets/modern-keystrokes/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+          "net.marblock.keystrokes.ModernKeystrokesClient"
+		]
+	},
+	"mixins": [
+		"modern-keystrokes.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

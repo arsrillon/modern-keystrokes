@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.marblock.keystrokes.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "client": [
+    "MixinMouse"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
