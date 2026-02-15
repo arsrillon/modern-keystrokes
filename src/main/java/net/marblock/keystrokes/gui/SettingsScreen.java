@@ -56,14 +56,13 @@ public class SettingsScreen extends Screen {
         currentY += btnH + 15;
         int sliderW = 200;
 
-        double currentXVal = (double) KeystrokesConfig.x / this.width;
+        double currentXVal = Math.max(0.0, Math.min(1.0, (double) KeystrokesConfig.x / Math.max(1, this.width - 65)));
         this.addRenderableWidget(new PositionSlider(centerX - sliderW / 2, currentY, sliderW, btnH, currentXVal, false));
 
         currentY += btnH + gap;
 
-        double currentYVal = (double) KeystrokesConfig.y / this.height;
+        double currentYVal = Math.max(0.0, Math.min(1.0, (double) KeystrokesConfig.y / Math.max(1, this.height - 85)));
         this.addRenderableWidget(new PositionSlider(centerX - sliderW / 2, currentY, sliderW, btnH, currentYVal, true));
-
         int bottomY = this.height - 28;
 
         this.addRenderableWidget(Button.builder(Component.literal("Reset Pos"), b -> {
@@ -110,7 +109,7 @@ public class SettingsScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            int max = isYAxis ? SettingsScreen.this.height : SettingsScreen.this.width;
+            int max = isYAxis ? Math.max(1, SettingsScreen.this.height - 85) : Math.max(1, SettingsScreen.this.width - 65);
             int currentValue = (int) (this.value * max);
             String label = isYAxis ? "Y: " : "X: ";
             this.setMessage(Component.literal(label + currentValue));
@@ -118,7 +117,7 @@ public class SettingsScreen extends Screen {
 
         @Override
         protected void applyValue() {
-            int max = isYAxis ? SettingsScreen.this.height : SettingsScreen.this.width;
+            int max = isYAxis ? Math.max(1, SettingsScreen.this.height - 85) : Math.max(1, SettingsScreen.this.width - 65);
             int pixelValue = (int) (this.value * max);
 
             if (isYAxis) {
