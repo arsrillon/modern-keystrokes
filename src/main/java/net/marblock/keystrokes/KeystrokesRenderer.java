@@ -4,13 +4,14 @@ import net.marblock.keystrokes.config.KeystrokesConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import java.awt.Color;
+import net.minecraft.util.Mth;
+
 import java.util.Deque;
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class KeystrokesRenderer {
-    private final Deque<Long> leftClickTimestamps = new LinkedList<>();
-    private final Deque<Long> rightClickTimestamps = new LinkedList<>();
+    private final Deque<Long> leftClickTimestamps = new ConcurrentLinkedDeque<>();
+    private final Deque<Long> rightClickTimestamps = new ConcurrentLinkedDeque<>();
 
     private static final int KEY_SIZE = 18;
     private static final int KEY_SPACING = 5;
@@ -22,24 +23,29 @@ public class KeystrokesRenderer {
     private static final float TEXT_SCALE = 0.75f;
     private static final float CPS_TEXT_SCALE = 0.65f;
 
+    @SuppressWarnings("unused")
     public void render(GuiGraphics guiGraphics, float partialTick) {
+        long currentTime = System.currentTimeMillis();
+
+        Long firstLeft;
+        while ((firstLeft = leftClickTimestamps.peekFirst()) != null && currentTime - firstLeft > 1000) {
+            leftClickTimestamps.pollFirst();
+        }
+
+        Long firstRight;
+        while ((firstRight = rightClickTimestamps.peekFirst()) != null && currentTime - firstRight > 1000) {
+            rightClickTimestamps.pollFirst();
+        }
+
         if (!KeystrokesConfig.isEnabled) return;
 
         Minecraft mc = Minecraft.getInstance();
         Font font = mc.font;
-        long currentTime = System.currentTimeMillis();
-
-        while (!leftClickTimestamps.isEmpty() && currentTime - leftClickTimestamps.getFirst() > 1000) {
-            leftClickTimestamps.pollFirst();
-        }
-        while (!rightClickTimestamps.isEmpty() && currentTime - rightClickTimestamps.getFirst() > 1000) {
-            rightClickTimestamps.pollFirst();
-        }
 
         float hue = (currentTime % 3000L) / 3000.0f;
-        int rgbColor = Color.getHSBColor(hue, 1, 1).getRGB();
+        int rgbColor = Mth.hsvToRgb(hue, 1.0f, 1.0f) | 0xFF000000;
 
-        int fpsBoxTop = KeystrokesConfig.y - INDICATOR_HEIGHT - KEY_SPACING; // Исправлено позиционирование FPS
+        int fpsBoxTop = KeystrokesConfig.y - INDICATOR_HEIGHT - KEY_SPACING;
 
         if (KeystrokesConfig.showFPS) {
             renderFPS(guiGraphics, font, "FPS: " + mc.getFps(), KeystrokesConfig.x + 4 - KEY_SIZE - KEY_SPACING, fpsBoxTop, rgbColor);
@@ -51,8 +57,11 @@ public class KeystrokesRenderer {
             renderSpaceBar(guiGraphics, mc, rgbColor);
         }
         if (KeystrokesConfig.showCPS) {
-            boolean leftTransition = !leftClickTimestamps.isEmpty() && (currentTime - leftClickTimestamps.getLast() < 50);
-            boolean rightTransition = !rightClickTimestamps.isEmpty() && (currentTime - rightClickTimestamps.getLast() < 50);
+            Long lastLeft = leftClickTimestamps.peekLast();
+            boolean leftTransition = lastLeft != null && (currentTime - lastLeft < 50);
+
+            Long lastRight = rightClickTimestamps.peekLast();
+            boolean rightTransition = lastRight != null && (currentTime - lastRight < 50);
 
             renderCPS(guiGraphics, font, "LMB", leftClickTimestamps.size() + " CPS", KeystrokesConfig.x - KEY_SIZE - KEY_SPACING, KeystrokesConfig.y + 2 * KEY_SIZE + LMB_RMB_Y_OFFSET, rgbColor, leftTransition);
             renderCPS(guiGraphics, font, "RMB", rightClickTimestamps.size() + " CPS", KeystrokesConfig.x + KEY_SIZE + KEY_SPACING, KeystrokesConfig.y + 2 * KEY_SIZE + LMB_RMB_Y_OFFSET, rgbColor, rightTransition);
@@ -85,7 +94,7 @@ public class KeystrokesRenderer {
 
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().scale(TEXT_SCALE, TEXT_SCALE);
-        int textColor = (borderColor == Color.WHITE.getRGB()) ? 0xFF000000 : 0xFFFFFFFF;
+        int textColor = (borderColor == 0xFFFFFFFF) ? 0xFF000000 : 0xFFFFFFFF;
         int centeredX = (int) ((adjustedX + (INDICATOR_WIDTH / 2f)) / TEXT_SCALE);
         int centeredY = (int) ((y + (INDICATOR_HEIGHT / 2f) - (font.lineHeight * TEXT_SCALE / 2f)) / TEXT_SCALE);
         guiGraphics.drawString(font, fpsText, centeredX - font.width(fpsText) / 2, centeredY, textColor, false);
@@ -93,7 +102,7 @@ public class KeystrokesRenderer {
     }
 
     private void renderCPS(GuiGraphics guiGraphics, Font font, String label, String cps, int x, int y, int borderColor, boolean transition) {
-        int bgColor = transition ? Color.WHITE.getRGB() : 0x80000000;
+        int bgColor = transition ? 0xFFFFFFFF : 0x80000000;
         int textColor = transition ? 0xFF000000 : 0xFFFFFFFF;
 
         guiGraphics.fill(x, y, x + INDICATOR_WIDTH, y + INDICATOR_HEIGHT * 2, bgColor);
