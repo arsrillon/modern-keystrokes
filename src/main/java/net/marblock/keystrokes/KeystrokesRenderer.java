@@ -39,7 +39,7 @@ public class KeystrokesRenderer {
         float hue = (currentTime % 3000L) / 3000.0f;
         int rgbColor = Color.getHSBColor(hue, 1, 1).getRGB();
 
-        int fpsBoxTop = KeystrokesConfig.y - INDICATOR_HEIGHT - KEY_SPACING; // Исправлено позиционирование FPS
+        int fpsBoxTop = KeystrokesConfig.y - INDICATOR_HEIGHT - KEY_SPACING;
 
         if (KeystrokesConfig.showFPS) {
             renderFPS(guiGraphics, font, "FPS: " + mc.getFps(), KeystrokesConfig.x + 4 - KEY_SIZE - KEY_SPACING, fpsBoxTop, rgbColor);
@@ -83,13 +83,15 @@ public class KeystrokesRenderer {
         guiGraphics.fill(adjustedX, y, adjustedX + INDICATOR_WIDTH, y + INDICATOR_HEIGHT, 0x80000000);
         drawBorder(guiGraphics, adjustedX, y, adjustedX + INDICATOR_WIDTH, y + INDICATOR_HEIGHT, borderColor);
 
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().scale(TEXT_SCALE, TEXT_SCALE);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().scale(TEXT_SCALE, TEXT_SCALE, 1.0f);
+
         int textColor = (borderColor == Color.WHITE.getRGB()) ? 0xFF000000 : 0xFFFFFFFF;
         int centeredX = (int) ((adjustedX + (INDICATOR_WIDTH / 2f)) / TEXT_SCALE);
         int centeredY = (int) ((y + (INDICATOR_HEIGHT / 2f) - (font.lineHeight * TEXT_SCALE / 2f)) / TEXT_SCALE);
         guiGraphics.drawString(font, fpsText, centeredX - font.width(fpsText) / 2, centeredY, textColor, false);
-        guiGraphics.pose().popMatrix();
+
+        guiGraphics.pose().popPose();
     }
 
     private void renderCPS(GuiGraphics guiGraphics, Font font, String label, String cps, int x, int y, int borderColor, boolean transition) {
@@ -99,11 +101,13 @@ public class KeystrokesRenderer {
         guiGraphics.fill(x, y, x + INDICATOR_WIDTH, y + INDICATOR_HEIGHT * 2, bgColor);
         drawBorder(guiGraphics, x, y, x + INDICATOR_WIDTH, y + INDICATOR_HEIGHT * 2, borderColor);
 
-        guiGraphics.pose().pushMatrix();
-        guiGraphics.pose().scale(CPS_TEXT_SCALE, CPS_TEXT_SCALE);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().scale(CPS_TEXT_SCALE, CPS_TEXT_SCALE, 1.0f);
+
         guiGraphics.drawCenteredString(font, label, (int) ((x + INDICATOR_WIDTH / 2f) / CPS_TEXT_SCALE), (int) ((y + 3) / CPS_TEXT_SCALE), textColor);
         guiGraphics.drawCenteredString(font, cps, (int) ((x + INDICATOR_WIDTH / 2f) / CPS_TEXT_SCALE), (int) ((y + INDICATOR_HEIGHT + 2) / CPS_TEXT_SCALE), textColor);
-        guiGraphics.pose().popMatrix();
+
+        guiGraphics.pose().popPose();
     }
 
     private void renderKeyBar(GuiGraphics guiGraphics, Font font, String key, int x, int y, int width, int height, boolean isPressed, int borderColor, int textColor) {

@@ -15,8 +15,7 @@ public class ModernKeystrokesClient implements ClientModInitializer {
         renderer = new KeystrokesRenderer();
 
         HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
-            float partialTick = tickDelta.getGameTimeDeltaPartialTick(true);
-            renderer.render(guiGraphics, partialTick);
+            renderer.render(guiGraphics, tickDelta);
         });
 
         KeystrokesCommand.register();
