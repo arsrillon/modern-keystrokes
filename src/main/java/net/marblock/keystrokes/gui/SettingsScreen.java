@@ -2,7 +2,7 @@ package net.marblock.keystrokes.gui;
 
 import net.marblock.keystrokes.ModernKeystrokesClient;
 import net.marblock.keystrokes.config.KeystrokesConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -82,13 +82,13 @@ public class SettingsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
 
         if (ModernKeystrokesClient.renderer != null) {
-            net.marblock.keystrokes.ModernKeystrokesClient.renderer.render(guiGraphics, partialTick);
+            ModernKeystrokesClient.renderer.render(guiGraphics, partialTick);
         }
     }
 

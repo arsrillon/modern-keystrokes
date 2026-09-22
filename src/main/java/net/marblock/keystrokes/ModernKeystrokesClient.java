@@ -1,9 +1,10 @@
 package net.marblock.keystrokes;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.marblock.keystrokes.command.KeystrokesCommand;
 import net.marblock.keystrokes.config.KeystrokesConfig;
+import net.minecraft.resources.Identifier;
 
 public class ModernKeystrokesClient implements ClientModInitializer {
     public static KeystrokesRenderer renderer;
@@ -14,8 +15,8 @@ public class ModernKeystrokesClient implements ClientModInitializer {
 
         renderer = new KeystrokesRenderer();
 
-        HudRenderCallback.EVENT.register((guiGraphics, tickDelta) -> {
-            float partialTick = tickDelta.getGameTimeDeltaPartialTick(true);
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("modern-keystrokes", "overlay"), (guiGraphics, deltaTracker) -> {
+            float partialTick = deltaTracker.getGameTimeDeltaPartialTick(true);
             renderer.render(guiGraphics, partialTick);
         });
 
