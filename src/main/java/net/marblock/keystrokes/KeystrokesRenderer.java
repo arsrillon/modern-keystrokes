@@ -4,6 +4,7 @@ import net.marblock.keystrokes.config.KeystrokesConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import java.awt.Color;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -14,8 +15,6 @@ public class KeystrokesRenderer {
 
     private static final int KEY_SIZE = 18;
     private static final int KEY_SPACING = 5;
-    private static final int LMB_RMB_Y_OFFSET = (KEY_SPACING + KEY_SIZE) - 3;
-    private static final int SPACEBAR_Y_OFFSET = 2 * KEY_SPACING;
 
     private static final int INDICATOR_WIDTH = 45;
     private static final int INDICATOR_HEIGHT = 11;
@@ -39,46 +38,83 @@ public class KeystrokesRenderer {
         float hue = (currentTime % 3000L) / 3000.0f;
         int rgbColor = Color.getHSBColor(hue, 1, 1).getRGB();
 
-        int fpsBoxTop = KeystrokesConfig.y - INDICATOR_HEIGHT - KEY_SPACING;
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate((float) KeystrokesConfig.x, (float) KeystrokesConfig.y);
+        guiGraphics.pose().scale(KeystrokesConfig.scale, KeystrokesConfig.scale);
+        guiGraphics.pose().translate((float) -KeystrokesConfig.x, (float) -KeystrokesConfig.y);
+
+        int currentY = KeystrokesConfig.y;
 
         if (KeystrokesConfig.showFPS) {
-            renderFPS(guiGraphics, font, "FPS: " + mc.getFps(), KeystrokesConfig.x + 4 - KEY_SIZE - KEY_SPACING, fpsBoxTop, rgbColor);
+            renderIndicatorBox(guiGraphics, font, "FPS: " + mc.getFps(), KeystrokesConfig.x + 4 - KEY_SIZE - KEY_SPACING, currentY, rgbColor);
+            currentY += INDICATOR_HEIGHT + KEY_SPACING;
         }
+
+        if (KeystrokesConfig.showPing) {
+            renderIndicatorBox(guiGraphics, font, getPing(mc) + " ms", KeystrokesConfig.x + 4 - KEY_SIZE - KEY_SPACING, currentY, rgbColor);
+            currentY += INDICATOR_HEIGHT + KEY_SPACING;
+        }
+
         if (KeystrokesConfig.showKeys) {
-            renderKeys(guiGraphics, font, mc, rgbColor);
+            renderKeys(guiGraphics, font, mc, rgbColor, currentY);
+            currentY += 2 * KEY_SIZE + KEY_SPACING * 2;
         }
+
         if (KeystrokesConfig.showSpace) {
-            renderSpaceBar(guiGraphics, mc, rgbColor);
+            renderSpaceBar(guiGraphics, mc, rgbColor, currentY);
+            currentY += (KEY_SIZE / 4) + KEY_SPACING;
         }
+
         if (KeystrokesConfig.showCPS) {
             boolean leftTransition = !leftClickTimestamps.isEmpty() && (currentTime - leftClickTimestamps.getLast() < 50);
             boolean rightTransition = !rightClickTimestamps.isEmpty() && (currentTime - rightClickTimestamps.getLast() < 50);
 
-            renderCPS(guiGraphics, font, "LMB", leftClickTimestamps.size() + " CPS", KeystrokesConfig.x - KEY_SIZE - KEY_SPACING, KeystrokesConfig.y + 2 * KEY_SIZE + LMB_RMB_Y_OFFSET, rgbColor, leftTransition);
-            renderCPS(guiGraphics, font, "RMB", rightClickTimestamps.size() + " CPS", KeystrokesConfig.x + KEY_SIZE + KEY_SPACING, KeystrokesConfig.y + 2 * KEY_SIZE + LMB_RMB_Y_OFFSET, rgbColor, rightTransition);
+            renderCPS(guiGraphics, font, "LMB", leftClickTimestamps.size() + " CPS", KeystrokesConfig.x - KEY_SIZE - KEY_SPACING, currentY, rgbColor, leftTransition);
+            renderCPS(guiGraphics, font, "RMB", rightClickTimestamps.size() + " CPS", KeystrokesConfig.x + KEY_SIZE + KEY_SPACING, currentY, rgbColor, rightTransition);
+            currentY += (INDICATOR_HEIGHT * 2) + KEY_SPACING;
         }
+
+        guiGraphics.pose().popMatrix();
     }
 
-    private void renderKeys(GuiGraphicsExtractor guiGraphics, Font font, Minecraft mc, int rgbColor) {
+    private int lastValidPing = 0;
+
+    private int getPing(Minecraft mc) {
+        if (mc.getConnection() == null || mc.player == null) {
+            return 0;
+        }
+
+        PlayerInfo info = mc.getConnection().getPlayerInfo(mc.player.getGameProfile().id());
+        if (info == null) {
+            info = mc.getConnection().getPlayerInfo(mc.player.getUUID());
+        }
+
+        if (info != null && info.getLatency() > 0) {
+            lastValidPing = info.getLatency();
+        }
+
+        return lastValidPing;
+    }
+
+    private void renderKeys(GuiGraphicsExtractor guiGraphics, Font font, Minecraft mc, int rgbColor, int y) {
         int textColor = 0xFFFFFFFF;
-        renderKeyBar(guiGraphics, font, "W", KeystrokesConfig.x, KeystrokesConfig.y, KEY_SIZE, KEY_SIZE, mc.options.keyUp.isDown(), rgbColor, textColor);
-        renderKeyBar(guiGraphics, font, "A", KeystrokesConfig.x - KEY_SIZE - KEY_SPACING, KeystrokesConfig.y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyLeft.isDown(), rgbColor, textColor);
-        renderKeyBar(guiGraphics, font, "S", KeystrokesConfig.x, KeystrokesConfig.y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyDown.isDown(), rgbColor, textColor);
-        renderKeyBar(guiGraphics, font, "D", KeystrokesConfig.x + KEY_SIZE + KEY_SPACING, KeystrokesConfig.y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyRight.isDown(), rgbColor, textColor);
+        renderKeyBar(guiGraphics, font, "W", KeystrokesConfig.x, y, KEY_SIZE, KEY_SIZE, mc.options.keyUp.isDown(), rgbColor, textColor);
+        renderKeyBar(guiGraphics, font, "A", KeystrokesConfig.x - KEY_SIZE - KEY_SPACING, y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyLeft.isDown(), rgbColor, textColor);
+        renderKeyBar(guiGraphics, font, "S", KeystrokesConfig.x, y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyDown.isDown(), rgbColor, textColor);
+        renderKeyBar(guiGraphics, font, "D", KeystrokesConfig.x + KEY_SIZE + KEY_SPACING, y + KEY_SIZE + KEY_SPACING, KEY_SIZE, KEY_SIZE, mc.options.keyRight.isDown(), rgbColor, textColor);
     }
 
-    private void renderSpaceBar(GuiGraphicsExtractor guiGraphics, Minecraft mc, int rgbColor) {
+    private void renderSpaceBar(GuiGraphicsExtractor guiGraphics, Minecraft mc, int rgbColor, int y) {
         int bgColor = mc.options.keyJump.isDown() ? rgbColor : 0x80000000;
         int spaceBarWidth = 3 * KEY_SIZE + 2 * KEY_SPACING;
         int spaceBarHeight = KEY_SIZE / 4;
         int spaceBarX = KeystrokesConfig.x + 1 - KEY_SIZE - KEY_SPACING;
-        int spaceBarY = KeystrokesConfig.y + 2 * KEY_SIZE + SPACEBAR_Y_OFFSET;
 
-        guiGraphics.fill(spaceBarX, spaceBarY, spaceBarX + spaceBarWidth, spaceBarY + spaceBarHeight, bgColor);
-        drawBorder(guiGraphics, spaceBarX, spaceBarY, spaceBarX + spaceBarWidth, spaceBarY + spaceBarHeight, rgbColor);
+        guiGraphics.fill(spaceBarX, y, spaceBarX + spaceBarWidth, y + spaceBarHeight, bgColor);
+        drawBorder(guiGraphics, spaceBarX, y, spaceBarX + spaceBarWidth, y + spaceBarHeight, rgbColor);
     }
 
-    private void renderFPS(GuiGraphicsExtractor guiGraphics, Font font, String fpsText, int x, int y, int borderColor) {
+    private void renderIndicatorBox(GuiGraphicsExtractor guiGraphics, Font font, String text, int x, int y, int borderColor) {
         int adjustedX = x + 5;
         guiGraphics.fill(adjustedX, y, adjustedX + INDICATOR_WIDTH, y + INDICATOR_HEIGHT, 0x80000000);
         drawBorder(guiGraphics, adjustedX, y, adjustedX + INDICATOR_WIDTH, y + INDICATOR_HEIGHT, borderColor);
@@ -88,7 +124,7 @@ public class KeystrokesRenderer {
         int textColor = (borderColor == Color.WHITE.getRGB()) ? 0xFF000000 : 0xFFFFFFFF;
         int centeredX = (int) ((adjustedX + (INDICATOR_WIDTH / 2f)) / TEXT_SCALE);
         int centeredY = (int) ((y + (INDICATOR_HEIGHT / 2f) - (font.lineHeight * TEXT_SCALE / 2f)) / TEXT_SCALE);
-        guiGraphics.text(font, fpsText, centeredX - font.width(fpsText) / 2, centeredY, textColor, false);
+        guiGraphics.text(font, text, centeredX - font.width(text) / 2, centeredY, textColor, false);
         guiGraphics.pose().popMatrix();
     }
 
