@@ -12,7 +12,7 @@ public class KeystrokesCommand {
             dispatcher.register(ClientCommands.literal("keystrokes")
                     .executes(context -> {
                         Minecraft.getInstance().execute(() -> {
-                            Minecraft.getInstance().setScreen(new SettingsScreen());
+                            Minecraft.getInstance().gui.setScreen(new SettingsScreen());
                         });
                         return 1;
                     }));
