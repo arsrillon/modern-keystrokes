@@ -17,9 +17,9 @@ public class MixinMouse {
                 int button = mouseButtonInfo.button();
 
                 if (button == 0) {
-                    net.marblock.keystrokes.ModernKeystrokesClient.renderer.incrementLeftClicks();
+                    ModernKeystrokesClient.renderer.incrementLeftClicks();
                 } else if (button == 1) {
-                    net.marblock.keystrokes.ModernKeystrokesClient.renderer.incrementRightClicks();
+                    ModernKeystrokesClient.renderer.incrementRightClicks();
                 }
             }
         }
