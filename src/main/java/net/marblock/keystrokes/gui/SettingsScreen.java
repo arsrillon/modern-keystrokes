@@ -8,6 +8,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.util.Locale;
+
 public class SettingsScreen extends Screen {
 
     public SettingsScreen() {
@@ -22,7 +24,7 @@ public class SettingsScreen extends Screen {
         int btnH = 20;
         int gap = 4;
 
-        int currentY = 40;
+        int currentY = 35;
 
         this.addRenderableWidget(Button.builder(Component.literal("Mod: " + getStatus(KeystrokesConfig.isEnabled)), b -> {
             KeystrokesConfig.isEnabled = !KeystrokesConfig.isEnabled;
@@ -51,9 +53,14 @@ public class SettingsScreen extends Screen {
         this.addRenderableWidget(Button.builder(Component.literal("Spacebar: " + getStatus(KeystrokesConfig.showSpace)), b -> {
             KeystrokesConfig.showSpace = !KeystrokesConfig.showSpace;
             b.setMessage(Component.literal("Spacebar: " + getStatus(KeystrokesConfig.showSpace)));
-        }).bounds(centerX - 75, currentY, 150, btnH).build());
+        }).bounds(centerX - btnW - gap, currentY, btnW, btnH).build());
 
-        currentY += btnH + 15;
+        this.addRenderableWidget(Button.builder(Component.literal("Ping: " + getStatus(KeystrokesConfig.showPing)), b -> {
+            KeystrokesConfig.showPing = !KeystrokesConfig.showPing;
+            b.setMessage(Component.literal("Ping: " + getStatus(KeystrokesConfig.showPing)));
+        }).bounds(centerX + gap, currentY, btnW, btnH).build());
+
+        currentY += btnH + 10;
         int sliderW = 200;
 
         double currentXVal = Math.max(0.0, Math.min(1.0, (double) KeystrokesConfig.x / Math.max(1, this.width - 65)));
@@ -63,11 +70,18 @@ public class SettingsScreen extends Screen {
 
         double currentYVal = Math.max(0.0, Math.min(1.0, (double) KeystrokesConfig.y / Math.max(1, this.height - 85)));
         this.addRenderableWidget(new PositionSlider(centerX - sliderW / 2, currentY, sliderW, btnH, currentYVal, true));
+
+        currentY += btnH + gap;
+
+        double currentScaleVal = Math.max(0.0, Math.min(1.0, (KeystrokesConfig.scale - 0.5) / 1.0));
+        this.addRenderableWidget(new ScaleSlider(centerX - sliderW / 2, currentY, sliderW, btnH, currentScaleVal));
+
         int bottomY = this.height - 28;
 
         this.addRenderableWidget(Button.builder(Component.literal("Reset Pos"), b -> {
             KeystrokesConfig.x = 25;
-            KeystrokesConfig.y = 22;
+            KeystrokesConfig.y = 10;
+            KeystrokesConfig.scale = 1.0f;
             this.rebuildWidgets();
         }).bounds(centerX - btnW - gap, bottomY, btnW, btnH).build());
 
@@ -88,7 +102,7 @@ public class SettingsScreen extends Screen {
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
 
         if (ModernKeystrokesClient.renderer != null) {
-            net.marblock.keystrokes.ModernKeystrokesClient.renderer.render(guiGraphics, partialTick);
+            ModernKeystrokesClient.renderer.render(guiGraphics, partialTick);
         }
     }
 
@@ -125,6 +139,24 @@ public class SettingsScreen extends Screen {
             } else {
                 KeystrokesConfig.x = pixelValue;
             }
+        }
+    }
+
+    private static class ScaleSlider extends AbstractSliderButton {
+        public ScaleSlider(int x, int y, int width, int height, double initialValue) {
+            super(x, y, width, height, Component.empty(), initialValue);
+            this.updateMessage();
+        }
+
+        @Override
+        protected void updateMessage() {
+            float currentScale = (float) (0.5 + this.value * 1.0);
+            this.setMessage(Component.literal("Scale: " + String.format(Locale.ROOT, "%.2fx", currentScale)));
+        }
+
+        @Override
+        protected void applyValue() {
+            KeystrokesConfig.scale = (float) (0.5 + this.value * 1.0);
         }
     }
 }
